@@ -26,38 +26,48 @@ perform it's various tasks:
 
 ## Examples
 To view the list of options:
-$ abctool
+
+`$ abctool`
 
 To edit an abc file (on my system it opens the source in emacs and
 shows the postscript in gv)
-$ abctool -e test.abc
+
+`$ abctool -e test.abc`
 
 To transpose the file "test.abc" a minor third up, convert it to 
 postscript and view the result in gv:
-$ abctool -t 3 test.abc
+
+`$ abctool -t 3 test.abc`
 
 To do the same using abc2abc:
-$ abctool -T 3 test.abc
+
+`$ abctool -T 3 test.abc`
 
 To remove fingerings from the file "test.abc", translate chords to
 danish and send the result to standard out:
-$ abctool -f -d -s test.abc
+
+`$ abctool -f -d -s test.abc`
 
 To remove all chords from the file "test.abc", convert it to
 postscript in landscape format and view the result in gv:
-$ abctool -c -o "-l" test.abc
+
+`$ abctool -c -o "-l" test.abc`
 
 To make a songbook of all .abc-files in the current directory:
-$ cat *.abc | abctool -r -
+
+`$ cat *.abc | abctool -r -`
 
 To generate PostScript, PDF and midi output from the file
 "test.abc" with "m7b5" substituted with "ø" and "dim7" with "°":
-$ abctool -j --ps --pdf test.abc
+
+`$ abctool -j --ps --pdf test.abc`
 
 To listen to the file "test.abc":
-$ abctool -p test.abc
+
+`$ abctool -p test.abc`
 
 To generate a pdf file (songbook.pdf) containing all songs recursively
 in current directory in concert key, Bb and Eb, bypassing ~/.abctoolrc:
-$ abctool --songbook -R --norc
+
+`$ abctool --songbook -R --norc`
 
