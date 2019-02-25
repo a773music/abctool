@@ -69,8 +69,8 @@ def change_encoding_to_utf8(file):
 
 
 class abctool:
-    version = '0.4.14'
-    date = '2017-06-23'
+    version = '0.4.15'
+    date = '2019-02-25'
     
     manual = """
 To view the list of options:
@@ -115,6 +115,9 @@ $ abctool --songbook -R --norc
 
 
     changelog = """
+--- Version 0.4.15 - 2019-02-25 ---
+* better filename with --pdf and '-' in title
+
 --- Version 0.4.14 - 2017-06-23 ---
 * jazz conversions (-j) now also substitues maj7 with a triangle
 
@@ -1175,6 +1178,7 @@ used to display PostScript and abc2abc is used to transpose
         abcTmpFile = tempfile.mktemp()
         psTmpFile = tempfile.mktemp()
         pdfFileName = self.getOutBasename() + '.pdf'
+        pdfFileName = pdfFileName.replace('_-_','-')
         self.writeFile(self.getAbc(),abcTmpFile)
         os.utime(abcTmpFile,(self.modTime,self.modTime))
         self.abc2ps(abcTmpFile + ' -O ' + psTmpFile + '  ' + options)
@@ -1838,7 +1842,7 @@ class abctune:
                     new = split[i]
                     new = new.replace('dim7','°')
                     new = new.replace('m7b5','ø')
-                    new = new.replace('maj7','Δ')
+                    new = new.replace('maj','Δ')
                     split[i] = new
                 lines[lineNb] = '"'.join(split)
             lineNb = lineNb + 1
