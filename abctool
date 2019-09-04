@@ -69,8 +69,8 @@ def change_encoding_to_utf8(file):
 
 
 class abctool:
-    version = '0.4.15'
-    date = '2019-02-25'
+    version = '0.4.16'
+    date = '2019-09-04'
     
     manual = """
 To view the list of options:
@@ -115,6 +115,9 @@ $ abctool --songbook -R --norc
 
 
     changelog = """
+--- Version 0.4.16 - 2019-09-04 ---
+* added --list_titles
+
 --- Version 0.4.15 - 2019-02-25 ---
 * better filename with --pdf and '-' in title
 
@@ -555,6 +558,7 @@ used to display PostScript and abc2abc is used to transpose
         selectGroup.add_option('-n', '', dest='tuneNumber', help='process only selected tune(s) (comma seperated list), first tune in file is 1, if -X also present -n is disregarded', default=None)
         selectGroup.add_option('-V', '', dest='keepVoices', help='extract only voices (comma seperated list)', default='')
         selectGroup.add_option('', '--list_voices', action='store_true', dest='listVoices', help='list voices (V:) found in the abc', default=False)
+        selectGroup.add_option('', '--list_titles', action='store_true', dest='listTitles', help='list titles (T:) found in the abc', default=False)
 
 
         # processing
@@ -689,6 +693,9 @@ used to display PostScript and abc2abc is used to transpose
 
         if self.options.listVoices:
             self.listVoices()
+            sys.exit()
+        if self.options.listTitles:
+            self.listTitles()
             sys.exit()
         if self.options.keepVoices:
             self.keepVoices()
@@ -1298,6 +1305,10 @@ used to display PostScript and abc2abc is used to transpose
         for abc in self.abcs:
             abc.listVoices()
 
+    def listTitles(self):
+        for abc in self.abcs:
+            abc.listTitles()
+
     def keepVoices(self):
         for abc in self.abcs:
             abc.keepVoices(self.options.keepVoices)
@@ -1716,6 +1727,12 @@ class abctune:
         for voice in self.voices:
             print(voice)
 
+    def listTitles(self):
+        lines = self.abc.split('\n')
+        for line in lines:
+            line = line.strip()
+            if line[:2] == 'T:':
+                print line[2:].strip()
     def removeChordsFromLine(self,line):
         split = line.split('"')
         if len(split) > 1:
