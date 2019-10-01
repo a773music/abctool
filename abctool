@@ -69,8 +69,8 @@ def change_encoding_to_utf8(file):
 
 
 class abctool:
-    version = '0.4.16'
-    date = '2019-09-04'
+    version = '0.4.17'
+    date = '2019-10-01'
     
     manual = """
 To view the list of options:
@@ -115,6 +115,9 @@ $ abctool --songbook -R --norc
 
 
     changelog = """
+--- Version 0.4.17 - 2019-10-01 ---
+* --list_titles also prints the number, useful for use (afterwards) with -n
+
 --- Version 0.4.16 - 2019-09-04 ---
 * added --list_titles
 
@@ -1306,8 +1309,10 @@ used to display PostScript and abc2abc is used to transpose
             abc.listVoices()
 
     def listTitles(self):
+        i = 1
         for abc in self.abcs:
-            abc.listTitles()
+            abc.listTitles(i)
+            i += 1
 
     def keepVoices(self):
         for abc in self.abcs:
@@ -1727,12 +1732,14 @@ class abctune:
         for voice in self.voices:
             print(voice)
 
-    def listTitles(self):
+    def listTitles(self, i):
         lines = self.abc.split('\n')
         for line in lines:
             line = line.strip()
             if line[:2] == 'T:':
-                print line[2:].strip()
+                print str(i) + ':' + line[2:].strip()
+                break
+
     def removeChordsFromLine(self,line):
         split = line.split('"')
         if len(split) > 1:
