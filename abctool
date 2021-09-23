@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import sys, string, re, optparse, os, tempfile, codecs, shutil
 
@@ -41,36 +41,10 @@ external_functionality['iconv'] = 'converting incoding'
 external_programs['pdftk'] = 'pdftk'
 external_functionality['pdftk'] = 'adding correct title to PDF files'
 
-"""
-latin = 'ISO-8859'
-
-def get_encoding(file):
-    result = os.popen('file "' + file + '"', 'r').readlines()
-    try:
-        encoding = result[0].split('\n')[0].split(':')[1].strip().split(' ')[0]
-        return encoding
-    except:
-        pass
-
-def change_encoding_to_utf8(file):
-    tmpFile = tempfile.mktemp()
-    encoding = get_encoding(file)
-    if encoding == latin:
-        print('in change encoding, file: ' + file)
-        os.system('iconv -f latin1 -t utf8 ' + file + ' -o ' + tmpFile)
-        shutil.move(tmpFile, file)
-    #sys.exit()
-    """     
-
-
-
-
-
-
 
 class abctool:
-    version = '0.4.17'
-    date = '2019-10-01'
+    version = '0.4.19'
+    date = '2021-09-23'
     
     manual = """
 To view the list of options:
@@ -115,11 +89,18 @@ $ abctool --songbook -R --norc
 
 
     changelog = """
+--- Version 0.4.19 - 2021-09-23 ---
+* -N, prepends single song selected with -n with tune number
+* no ! in filenames
+
+--- Version 0.4.18 - 2020-03-30 ---
+* --split, spilts multi-tune file into one-file-per-tune
+
 --- Version 0.4.17 - 2019-10-01 ---
-* --list_titles also prints the number, useful for use (afterwards) with -n
+* --list-titles also prints the number, useful for use (afterwards) with -n
 
 --- Version 0.4.16 - 2019-09-04 ---
-* added --list_titles
+* added --list-titles
 
 --- Version 0.4.15 - 2019-02-25 ---
 * better filename with --pdf and '-' in title
@@ -561,7 +542,7 @@ used to display PostScript and abc2abc is used to transpose
         selectGroup.add_option('-n', '', dest='tuneNumber', help='process only selected tune(s) (comma seperated list), first tune in file is 1, if -X also present -n is disregarded', default=None)
         selectGroup.add_option('-V', '', dest='keepVoices', help='extract only voices (comma seperated list)', default='')
         selectGroup.add_option('', '--list_voices', action='store_true', dest='listVoices', help='list voices (V:) found in the abc', default=False)
-        selectGroup.add_option('', '--list_titles', action='store_true', dest='listTitles', help='list titles (T:) found in the abc', default=False)
+        selectGroup.add_option('', '--list-titles', action='store_true', dest='listTitles', help='list titles (T:) found in the abc', default=False)
 
 
         # processing
@@ -603,8 +584,14 @@ used to display PostScript and abc2abc is used to transpose
         outputGroup.add_option('-s', '', action="store_true", dest='stdout', help='send to stdout', default=False)
         outputGroup.add_option('', '--pdf', action="store_true", dest='pdf', help='convert to pdf', default=False)
         outputGroup.add_option('', '--ps', action="store_true", dest='ps', help='convert to PostScript', default=False)
+        outputGroup.add_option('-N', '', action="store_true", dest='prepend_tune_nb', help='prepend filename with tune number', default=False)
+
+
+
+        
 #        outputGroup.add_option('', '--chord', action="store_true", dest='chord', help='convert to ChordPro', default=False)
         outputGroup.add_option('', '--songbook', action="store_true", dest='generateSongbook', help='generate songbook.pdf containing all .abc files in current directory in concert key and transposed for Bb and Eb instruments. If -R is present do it recursively', default=False)
+        outputGroup.add_option('', '--split', action="store_true", dest='split', help='split into individual files, each containing one tune', default=False)
         outputGroup.add_option('-R', '', action="store_true", dest='recursive', help='look for files recursively', default=False)
         outputGroup.add_option('', '--midi', action='store_true', dest='generateMidi', help='generate midi', default=False)
         outputGroup.add_option('-p', '', action='store_true', dest='playMidi', help='play', default=False)
@@ -657,7 +644,6 @@ used to display PostScript and abc2abc is used to transpose
         elif self.options.generateSongbook:
             self.generateSongbook()
             sys.exit()
-            
         if not '-h' in sys.argv:
             if len(args) == 0 and not '-i' in sys.argv:
                 print('missing file')
@@ -754,6 +740,10 @@ used to display PostScript and abc2abc is used to transpose
             self.generatePs()
         elif self.options.printFile:
             self.printFile()
+        elif self.options.split:
+            self.split()
+            sys.exit()
+            
         else:
             self.view()
 
@@ -841,6 +831,23 @@ used to display PostScript and abc2abc is used to transpose
                     print(error + 'couldn\'t find ' + program + ', some part(s) of ' + programname + ' won\'t work...')
                 
 
+    def split(self):
+        nb_files = len(self.abcs)
+        pad_size = max(len(str(nb_files)),2)
+        i = 0
+        for abc in self.abcs:
+            i += 1
+            number = str(i).zfill(pad_size)
+            title = abc.getTitle().lower()
+            title = title.replace(' ','_').replace('.','').replace(',','')
+            title = title.replace('!','').replace('?','')
+            title = title.replace('Æ','æ').replace('Ø','ø').replace('Å','å')
+            file_name = number + '_' + title + '.abc'
+            if os.path.isfile(file_name):
+                print(file_name + ' excists, skipping...')
+                continue
+            self.writeFile(abc.getAbc(), file_name)
+    
 
     def generateSongbook(self):
         options = self.options.abcOptions
@@ -913,7 +920,15 @@ used to display PostScript and abc2abc is used to transpose
         if self.options.tuneNumber and not ',' in self.options.tuneNumber:
             title = self.getTitle()
             basename = title.lower().replace(' ','_')
+            if self.options.prepend_tune_nb:
+                tuneNumber = self.options.tuneNumber
+                tuneNumber =tuneNumber.zfill(2)
+                basename = tuneNumber + '_' + basename
         basename = basename.replace("'",'')
+        basename = basename.strip('.')
+        basename = basename.strip('_')
+        basename = basename.replace(',','')
+        basename = basename.replace('!','')
         return basename
 
     def ps2pdf(self,ps,pdf):
@@ -947,8 +962,10 @@ used to display PostScript and abc2abc is used to transpose
             if line[:2] == 'T:':
                 title.append(line[2:])
                 
-
-        title = '_'.join(title)
+        if len(title):
+            title = title[0]
+        else:
+            title = ''
         return title
 
     def generateChord(self):
@@ -996,7 +1013,6 @@ used to display PostScript and abc2abc is used to transpose
             i = 0
             for i in range(0,len(music),2):
                 music[i] = strip_music(music[i])
-                #print(music[i])
             return music
 
         def string2list(string):
@@ -1009,8 +1025,6 @@ used to display PostScript and abc2abc is used to transpose
             words = prepare_words(words)
             music = prepare_music(music)
             result = []
-            #print(music)
-            #print(words)
 
             j_note = 0
             j_note_group = 0
@@ -1023,17 +1037,14 @@ used to display PostScript and abc2abc is used to transpose
                 if j_note >= len(music[j_note_group]):
                     j_note_group = j_note_group + 2
                     j_note = 0
-                #print('replaceing j_note:' + str(j_note) + ', j_note_group:' + str(j_note_group))
                 music[j_note_group][j_note] = word
                 j_note = j_note + 1
-            #print(music)
             for i in range(0, len(music)):
                 if type(music[i]).__name__ == 'list':
                     result.append(''.join(music[i]))
                 elif type(music[i]).__name__ == 'str':
                     result.append('[' + music[i] + ']')
             result = ''.join(result)
-            #print(result)
             return result
 
         chord = []
@@ -1133,8 +1144,6 @@ used to display PostScript and abc2abc is used to transpose
         os.utime(abcTmpFile,(self.modTime,self.modTime))
         self.abc2ps(abcTmpFile + ' -O ' + psFileName + '  ' + options)
         self.addTotalNbPages(psFileName)
-        #print(self.getNbPages())
-        #sys.exit()
         os.remove(abcTmpFile)
 
 
@@ -1181,14 +1190,12 @@ used to display PostScript and abc2abc is used to transpose
         os.system('pdftk "' + pdfFileName +'" update_info_utf8 ' + infoTmpFile + ' output ' + pdfTmpFile)
         shutil.move(pdfTmpFile,pdfFileName)
         os.remove(infoTmpFile)
-        
-                
+
     def generatePdf(self):
         options = self.options.abcOptions
         abcTmpFile = tempfile.mktemp()
         psTmpFile = tempfile.mktemp()
         pdfFileName = self.getOutBasename() + '.pdf'
-        pdfFileName = pdfFileName.replace('_-_','-')
         self.writeFile(self.getAbc(),abcTmpFile)
         os.utime(abcTmpFile,(self.modTime,self.modTime))
         self.abc2ps(abcTmpFile + ' -O ' + psTmpFile + '  ' + options)
@@ -1245,7 +1252,6 @@ used to display PostScript and abc2abc is used to transpose
         os.utime(abcTmpFile,(self.modTime,self.modTime))
         self.abc2ps(abcTmpFile + ' -O ' + psTmpFile + '  ' + options)
         self.addTotalNbPages(psTmpFile)
-        #print(self.getNbPages(psTmpFile))
         self.gv(gv_view_options + ' ' + psTmpFile)
 
     def viewFile(self):
@@ -1558,6 +1564,19 @@ class abctune:
             if line[:2] != 'W:':
                 self.abc += '\n' + line
 
+    def getTitle(self, nb=1):
+        i = 1
+        # HERHER
+        title = []
+        for line in self.getLines():
+            line = line.strip()
+            if line[:2] == 'T:':
+                if i > nb:
+                    break
+                i += 1
+                title.append(line[2:].strip())
+        return ', '.join(title)
+                
 
     def addTitle(self,title):
         lines = self.getLines()
@@ -1737,7 +1756,7 @@ class abctune:
         for line in lines:
             line = line.strip()
             if line[:2] == 'T:':
-                print str(i) + ':' + line[2:].strip()
+                print(str(i) + ':' + line[2:].strip())
                 break
 
     def removeChordsFromLine(self,line):
