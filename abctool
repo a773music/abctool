@@ -385,20 +385,20 @@ used to display PostScript and abc2abc is used to transpose
         print(self.manual)
         sys.exit()
 
-    def writeFile(self,string,file):
+    def writeFile(self,text,file):
         f = open(file,'w')
-        f.write(string)
+        f.write(text)
         f.close()
         
-    def reencode(self,string):
+    def reencode(self,text):
         print('in reencode')
         try:
-            tmp = string.decode('utf-8')
+            tmp = text.decode('utf-8')
         except:
             pass
         else:
-            string = tmp.encode('latin-1')
-        return string
+            text = tmp.encode('latin-1')
+        return text
         # unused...
         print(self.options.encoding)
         if self.options.encoding == 'latin-1':
@@ -1015,10 +1015,10 @@ used to display PostScript and abc2abc is used to transpose
                 music[i] = strip_music(music[i])
             return music
 
-        def string2list(string):
+        def string2list(text):
             result = []
-            for i in range(0,len(string)):
-                result.append(string[i])
+            for i in range(0,len(text)):
+                result.append(text[i])
             return result
 
         def implode_lines(music, words):
@@ -1156,9 +1156,9 @@ used to display PostScript and abc2abc is used to transpose
             filecontent = codecs.open(file, "r", "latin-1" ).read()
         return filecontent
 
-    def string2file(self,string,file):
+    def string2file(self,text,file):
         f = open(file,'w')
-        f.write(string)
+        f.write(text)
         f.close()
 
     def addTitleToPdf(self,pdfFileName):
@@ -1268,8 +1268,8 @@ used to display PostScript and abc2abc is used to transpose
 
 
 
-    def isTune(self,string):
-        if len(string) < 2 or string[:2] != 'X:':
+    def isTune(self,text):
+        if len(text) < 2 or text[:2] != 'X:':
             return False
         else:
             return True
@@ -1419,7 +1419,7 @@ class abctune:
              'mixolydian':4, 'mix':4,
              'aeolian':5, 'aeo':5,
              'locrian':6, 'loc':6,
-             'maj': 0,
+             'maj': 0, 'major': 0,
              'm':5, 'minor':5, 'min': 5
              }
 
@@ -1453,8 +1453,8 @@ class abctune:
 
 
     
-    def __init__(self, string):
-        self.abc = string
+    def __init__(self, text):
+        self.abc = text
         self.setVoices()
 
 
@@ -1462,9 +1462,9 @@ class abctune:
     def writeAbcToFile(self,file):
         self.writeFile(self.abc,file)
         
-    def writeFile(self,string,file):
+    def writeFile(self,text,file):
         f = open(file,'w')
-        f.write(string)
+        f.write(text)
         f.close()
 
     """
@@ -1489,8 +1489,8 @@ class abctune:
     def getAbc(self):
         return self.abc
 
-    def abc2lines(self,string):
-        return string.split("\n")
+    def abc2lines(self,text):
+        return text.split("\n")
 
     def lines2abc(self,lines):
         return "\n".join(lines)
@@ -2158,7 +2158,7 @@ class abctune:
                 if key_type == '':
                     key = key_root
                 else:
-                    exit
+                    sys.exit()
             
             # make F# -> Gb
             key = self.non_enharmonic_key(key)
@@ -2471,10 +2471,10 @@ class abctune:
         if octave_count == 0:
             pass
         elif octave_count < 0 and root.islower():
-            root = string.upper(root)
+            root = root.upper()
             octave_count = octave_count + 1
         elif octave_count > 0 and root.isupper():
-            root = string.lower(root)
+            root = root.lower()
             octave_count = octave_count - 1
 
         if octave_count == 0:
